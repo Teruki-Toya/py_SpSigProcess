@@ -31,19 +31,56 @@ def spectrum(x, fs, fftSize):
   
   return freq, S_amp, S_phase
 
-
-## スペクトログラム
-def spgram(x, fs, winSize, *, shiftC = 4, fftC = 5):
+## 短時間フレームシフトによるスペクトル行列の生成
+def specByFrm(x, fs, winSize, shiftSize = -9999, fftSize = -9999):
   if winSize % 2 == 1:
     winSize = winSize + 1
   
   # 窓のシフト長
-  shiftSize = round(winSize / shiftC)
+  if shiftSize < 0:
+    shiftSize = winSize
+	  
+  if shiftSize % 2 == 1:
+    shiftSize = shiftSize + 1
+  
+  # FFT長
+  if fftSize < 0:
+    fftSize = winSize
+
+  if fftSize % 2 == 1:
+    fftSize = fftSize + 1
+  
+  # 総フレーム数
+  N_frame = np.floor((len(x) - (winSize - shiftSize)) / shiftSize)
+  N_frame_int = N_frame.astype(np.int)
+  
+  # 周波数 - 時間のスペクトル行列
+  X_frm = np.zeros((N_frame_int, fftSize), dtype=np.complex)
+  for frame in range(N_frame_int):
+    offset = shiftSize * frame  # フレームをシフトしながら
+    s = x[offset : offset + winSize]
+
+    w = wdFunc.winHann(winSize)
+    sw = s * w	# 分析窓をかける
+
+    X = spfft.fft(sw, fftSize)  # 高速フーリエ変換（FFT）
+    X_frm[frame, :] = X
+
+  return X_frm
+
+## スペクトログラム
+def spgram(x, fs, winSize, shiftSize, fftC = 1):
+  if winSize % 2 == 1:
+    winSize = winSize + 1
+  
+  # 窓のシフト長
   if shiftSize % 2 == 1:
     shiftSize = shiftSize + 1
   
   # FFT長
   fftSize = winSize * fftC
+  if fftSize % 2 == 1:
+    fftSize = fftSize + 1
   
   # 総フレーム数
   N_frame = np.floor((len(x) - (winSize - shiftSize)) / shiftSize)

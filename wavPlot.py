@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 import wavRead
 
 # WAV ファイルのパス
-wavFile = "＜オーディオデータ（のパス）＞.wav"
+wavFile = "snd/voice+a+_org.wav"
 
 # WAV ファイルを数値配列に変換
 x, fs = wavRead.wav2int(wavFile)
